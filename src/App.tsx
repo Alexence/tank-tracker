@@ -6,15 +6,32 @@ import {
   RefreshCw,
   Search,
   Droplets,
+  Beaker,
   Fish,
   X,
   ChevronRight,
+  Settings,
+  Palette,
+  Check,
 } from "lucide-react";
 import { supabase } from "./lib/supabase";
 import type { Tank, TankParameter, WaterChange } from "./types";
 
 type Modal = "tank" | "parameter" | "change" | null;
 type Tab = "overview" | "parameters" | "changes";
+type Modal = "tank" | "parameter" | "change" | null;
+type Tab = "overview" | "parameters" | "changes";
+type Theme =
+  | "ocean"
+  | "coral"
+  | "tropical"
+  | "space"
+  | "sunset"
+  | "planted";
+
+type CardStyle = "rounded" | "sharp";
+type Density = "comfortable" | "compact";
+type TextSize = "normal" | "large";
 
 const num = (v: string) => (v === "" ? null : Number(v));
 
@@ -38,7 +55,40 @@ function App() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [draggedTankId, setDraggedTankId] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
+const [theme, setTheme] = useState<Theme>(
+  () => (localStorage.getItem("tank-theme") as Theme) || "ocean"
+);
+
+const [cardStyle, setCardStyle] = useState<CardStyle>(
+  () => (localStorage.getItem("tank-card-style") as CardStyle) || "rounded"
+);
+
+const [density, setDensity] = useState<Density>(
+  () => (localStorage.getItem("tank-density") as Density) || "comfortable"
+);
+
+const [textSize, setTextSize] = useState<TextSize>(
+  () => (localStorage.getItem("tank-text-size") as TextSize) || "normal"
+);
+
+useEffect(() => {
+  localStorage.setItem("tank-theme", theme);
+}, [theme]);
+
+useEffect(() => {
+  localStorage.setItem("tank-card-style", cardStyle);
+}, [cardStyle]);
+
+useEffect(() => {
+  localStorage.setItem("tank-density", density);
+}, [density]);
+
+useEffect(() => {
+  localStorage.setItem("tank-text-size", textSize);
+}, [textSize]);
+  
   const load = async () => {
     setLoading(true);
 
@@ -174,7 +224,7 @@ function App() {
   };
 
   return (
-    <div className="app">
+    <div className={`app theme-${theme} cards-${cardStyle} density-${density} text-${textSize}`}>
       <header>
         <button
           className="menu-button"
@@ -194,21 +244,22 @@ function App() {
         </div>
 
         <div className="actions">
-          <button
-            onClick={load}
-            className="icon"
-          >
-            <RefreshCw size={17} />
-          </button>
+  <button
+    className="icon settings-button"
+    onClick={() => setSettingsOpen(true)}
+    aria-label="Open settings"
+  >
+    <Settings size={17} />
+  </button>
 
-          <button
-            className="primary"
-            onClick={() => open("tank")}
-          >
-            <Plus size={17} />
-            Add tank
-          </button>
-        </div>
+  <button onClick={load} className="icon">
+    <RefreshCw size={17} />
+  </button>
+
+  <button className="primary" onClick={() => open("tank")}>
+    <Plus size={17} /> Add tank
+  </button>
+</div>
       </header>
 
       <main>
@@ -535,17 +586,237 @@ function App() {
           />
         )}
 
-      {modal === "change" &&
-        tank && (
-          <ChangeModal
-            tank={tank.id}
-            row={edit}
-            close={() =>
-              setModal(null)
-            }
-            done={load}
-          />
-        )}
+            {modal === "change" && tank && (
+        <ChangeModal
+          tank={tank.id}
+          row={edit}
+          close={() => setModal(null)}
+          done={load}
+        />
+      )}
+
+      {settingsOpen && (
+        <SettingsPanel
+          theme={theme}
+          setTheme={setTheme}
+          cardStyle={cardStyle}
+          setCardStyle={setCardStyle}
+          density={density}
+          setDensity={setDensity}
+          textSize={textSize}
+          setTextSize={setTextSize}
+          close={() => setSettingsOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function SettingsPanel({
+  theme,
+  setTheme,
+  cardStyle,
+  setCardStyle,
+  density,
+  setDensity,
+  textSize,
+  setTextSize,
+  close,
+}: {
+  theme: Theme;
+  setTheme: (value: Theme) => void;
+  cardStyle: CardStyle;
+  setCardStyle: (value: CardStyle) => void;
+  density: Density;
+  setDensity: (value: Density) => void;
+  textSize: TextSize;
+  setTextSize: (value: TextSize) => void;
+  close: () => void;
+}) {
+  const themes: {
+    id: Theme;
+    name: string;
+    emoji: string;
+    description: string;
+  }[] = [
+    {
+      id: "ocean",
+      name: "Deep Ocean",
+      emoji: "🌊",
+      description: "Classic aquarium blue",
+    },
+    {
+      id: "coral",
+      name: "Coral Reef",
+      emoji: "🪸",
+      description: "Warm coral reef colours",
+    },
+    {
+      id: "tropical",
+      name: "Tropical",
+      emoji: "🐠",
+      description: "Bright tropical water",
+    },
+    {
+      id: "space",
+      name: "Deep Space",
+      emoji: "🌌",
+      description: "Neon cosmic aquarium",
+    },
+    {
+      id: "sunset",
+      name: "Sunset Reef",
+      emoji: "🌅",
+      description: "Purple, pink and orange",
+    },
+    {
+      id: "planted",
+      name: "Planted Tank",
+      emoji: "🌿",
+      description: "Natural green aquarium",
+    },
+  ];
+
+  return (
+    <div className="settings-backdrop" onClick={close}>
+      <aside
+        className="settings-panel"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="settings-header">
+          <div>
+            <small>PERSONALISE</small>
+            <h2>Settings</h2>
+          </div>
+
+          <button
+            className="icon"
+            onClick={close}
+            aria-label="Close settings"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="settings-section">
+          <div className="settings-section-title">
+            <Palette size={16} />
+            <span>Theme</span>
+          </div>
+
+          <div className="theme-grid">
+            {themes.map((x) => (
+              <button
+                key={x.id}
+                className={`theme-option ${
+                  theme === x.id ? "selected" : ""
+                }`}
+                onClick={() => setTheme(x.id)}
+              >
+                <span className={`theme-preview preview-${x.id}`}>
+                  {x.emoji}
+                </span>
+
+                <span className="theme-info">
+                  <b>{x.name}</b>
+                  <small>{x.description}</small>
+                </span>
+
+                {theme === x.id && (
+                  <span className="theme-check">
+                    <Check size={14} />
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="settings-section">
+          <div className="settings-section-title">
+            <span>▦</span>
+            <span>Card style</span>
+          </div>
+
+          <div className="choice-row">
+            <button
+              className={cardStyle === "rounded" ? "choice active" : "choice"}
+              onClick={() => setCardStyle("rounded")}
+            >
+              <span className="choice-icon rounded-demo" />
+              <span>
+                <b>Rounded</b>
+                <small>Soft aquarium style</small>
+              </span>
+            </button>
+
+            <button
+              className={cardStyle === "sharp" ? "choice active" : "choice"}
+              onClick={() => setCardStyle("sharp")}
+            >
+              <span className="choice-icon sharp-demo" />
+              <span>
+                <b>Sharp</b>
+                <small>Clean technical style</small>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div className="settings-section">
+          <div className="settings-section-title">
+            <span>↕</span>
+            <span>Layout density</span>
+          </div>
+
+          <div className="segmented">
+            <button
+              className={density === "comfortable" ? "active" : ""}
+              onClick={() => setDensity("comfortable")}
+            >
+              Comfortable
+            </button>
+
+            <button
+              className={density === "compact" ? "active" : ""}
+              onClick={() => setDensity("compact")}
+            >
+              Compact
+            </button>
+          </div>
+        </div>
+
+        <div className="settings-section">
+          <div className="settings-section-title">
+            <span>A</span>
+            <span>Text size</span>
+          </div>
+
+          <div className="segmented">
+            <button
+              className={textSize === "normal" ? "active" : ""}
+              onClick={() => setTextSize("normal")}
+            >
+              Normal
+            </button>
+
+            <button
+              className={textSize === "large" ? "active" : ""}
+              onClick={() => setTextSize("large")}
+            >
+              Large
+            </button>
+          </div>
+        </div>
+
+        <div className="settings-footer">
+          <span>🐟</span>
+          <div>
+            <b>Tank Tracker</b>
+            <small>Your aquarium, your style.</small>
+          </div>
+        </div>
+      </aside>
     </div>
   );
 }
