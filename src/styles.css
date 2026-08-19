@@ -1229,6 +1229,10 @@ label input::placeholder {
     display: none;
   }
 
+  .actions .settings-button {
+    display: inline-flex;
+  }
+
   .actions .primary {
     min-height: 42px;
 
