@@ -144,6 +144,18 @@ aside {
   text-align: left;
   gap: 9px;
 }
+.tank {
+  cursor: grab;
+}
+
+.tank:active {
+  cursor: grabbing;
+}
+
+.tank.dragging {
+  opacity: 0.45;
+  transform: scale(0.98);
+}
 .tank:hover {
   background: #0a1827;
 }
