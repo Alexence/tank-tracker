@@ -1181,3 +1181,696 @@ label input:focus {
     font-size: 18px;
   }
 }
+/* =========================================================
+   SETTINGS
+========================================================= */
+
+.settings-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+
+  background: rgba(0, 0, 0, 0.58);
+
+  backdrop-filter: blur(4px);
+}
+
+.settings-panel {
+  position: fixed;
+
+  top: 0;
+  right: 0;
+  bottom: 0;
+
+  width: min(420px, 92vw);
+
+  padding: 25px;
+
+  overflow-y: auto;
+
+  background: var(--bg-panel);
+
+  border-left: 1px solid var(--border);
+
+  box-shadow: -25px 0 80px rgba(0, 0, 0, 0.45);
+
+  animation: settingsSlide 0.25s ease;
+}
+
+@keyframes settingsSlide {
+  from {
+    transform: translateX(100%);
+    opacity: 0.5;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.settings-header {
+  display: flex;
+
+  align-items: flex-start;
+  justify-content: space-between;
+
+  margin-bottom: 28px;
+}
+
+.settings-header small {
+  color: var(--accent);
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 0.14em;
+}
+
+.settings-header h2 {
+  font: 800 30px Manrope;
+
+  margin: 5px 0 0;
+}
+
+.settings-section {
+  margin-bottom: 28px;
+}
+
+.settings-section-title {
+  display: flex;
+
+  align-items: center;
+  gap: 8px;
+
+  margin-bottom: 12px;
+
+  color: var(--text);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.settings-section-title svg {
+  color: var(--accent);
+}
+
+/* =========================================================
+   THEME OPTIONS
+========================================================= */
+
+.theme-grid {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 9px;
+}
+
+.theme-option {
+  position: relative;
+
+  min-height: 92px;
+
+  padding: 10px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  text-align: left;
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--card-radius);
+
+  background: var(--bg-card);
+
+  color: var(--text);
+
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease,
+    background 0.15s ease;
+}
+
+.theme-option:hover {
+  transform: translateY(-1px);
+
+  border-color: var(--accent);
+}
+
+.theme-option.selected {
+  border-color: var(--accent);
+
+  box-shadow:
+    0 0 0 1px var(--accent),
+    0 8px 25px rgba(0, 0, 0, 0.18);
+}
+
+.theme-preview {
+  width: 42px;
+  height: 42px;
+
+  flex: 0 0 42px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 12px;
+
+  font-size: 21px;
+
+  background: var(--bg-input);
+}
+
+.theme-info {
+  min-width: 0;
+}
+
+.theme-info b {
+  display: block;
+
+  font-size: 12px;
+}
+
+.theme-info small {
+  display: block;
+
+  margin-top: 3px;
+
+  color: var(--text-muted);
+
+  font-size: 9px;
+
+  line-height: 1.3;
+}
+
+.theme-check {
+  position: absolute;
+
+  right: 8px;
+  top: 8px;
+
+  width: 21px;
+  height: 21px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+/* =========================================================
+   THEME PREVIEWS
+========================================================= */
+
+.preview-ocean {
+  background: linear-gradient(135deg, #0b3545, #2fe0d1);
+}
+
+.preview-coral {
+  background: linear-gradient(135deg, #40202b, #ff796c);
+}
+
+.preview-tropical {
+  background: linear-gradient(135deg, #063d3a, #55e8b2);
+}
+
+.preview-space {
+  background: linear-gradient(135deg, #251b4d, #9c7cff);
+}
+
+.preview-sunset {
+  background: linear-gradient(135deg, #45204c, #ff8b62);
+}
+
+.preview-planted {
+  background: linear-gradient(135deg, #173d2b, #65d98a);
+}
+
+/* =========================================================
+   SETTINGS CHOICES
+========================================================= */
+
+.choice-row {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 9px;
+}
+
+.choice {
+  min-height: 68px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  padding: 10px;
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--card-radius);
+
+  background: var(--bg-card);
+
+  color: var(--text);
+
+  text-align: left;
+}
+
+.choice:hover {
+  border-color: var(--accent);
+}
+
+.choice.active {
+  border-color: var(--accent);
+
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.choice b {
+  display: block;
+
+  font-size: 11px;
+}
+
+.choice small {
+  display: block;
+
+  margin-top: 3px;
+
+  color: var(--text-muted);
+
+  font-size: 9px;
+}
+
+.choice-icon {
+  width: 35px;
+  height: 35px;
+
+  flex: 0 0 35px;
+
+  border: 2px solid var(--accent);
+
+  background: var(--bg-input);
+}
+
+.rounded-demo {
+  border-radius: 10px;
+}
+
+.sharp-demo {
+  border-radius: 2px;
+}
+
+/* =========================================================
+   SEGMENTED CONTROLS
+========================================================= */
+
+.segmented {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  padding: 4px;
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--card-radius);
+
+  background: var(--bg-input);
+}
+
+.segmented button {
+  min-height: 38px;
+
+  border: 0;
+
+  border-radius: calc(var(--card-radius) - 3px);
+
+  background: transparent;
+
+  color: var(--text-muted);
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.segmented button.active {
+  background: var(--accent);
+
+  color: var(--accent-text);
+}
+
+/* =========================================================
+   SETTINGS FOOTER
+========================================================= */
+
+.settings-footer {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  margin-top: 35px;
+
+  padding-top: 20px;
+
+  border-top: 1px solid var(--border);
+}
+
+.settings-footer > span {
+  font-size: 25px;
+}
+
+.settings-footer b {
+  display: block;
+
+  font: 700 13px Manrope;
+}
+
+.settings-footer small {
+  color: var(--text-muted);
+
+  font-size: 10px;
+}
+
+/* =========================================================
+   THEME VARIABLES
+========================================================= */
+
+.app {
+  --bg-main: #07111d;
+  --bg-panel: #0a1726;
+  --bg-card: #0a1827;
+  --bg-input: #07131f;
+
+  --border: #1b3044;
+
+  --text: #edf7ff;
+  --text-secondary: #c8d9e5;
+  --text-muted: #71899d;
+
+  --accent: #2fe0d1;
+  --accent-text: #04151a;
+
+  --card-radius: 17px;
+
+  background: var(--bg-main);
+  color: var(--text);
+}
+
+/* =========================================================
+   OCEAN
+========================================================= */
+
+.theme-ocean {
+  --bg-main: #07111d;
+  --bg-panel: #0a1726;
+  --bg-card: #0a1827;
+  --bg-input: #07131f;
+
+  --border: #1b3044;
+
+  --text: #edf7ff;
+  --text-secondary: #c8d9e5;
+  --text-muted: #71899d;
+
+  --accent: #2fe0d1;
+  --accent-text: #04151a;
+}
+
+/* =========================================================
+   CORAL REEF
+========================================================= */
+
+.theme-coral {
+  --bg-main: #160d16;
+  --bg-panel: #21121d;
+  --bg-card: #281520;
+  --bg-input: #180d17;
+
+  --border: #4b2934;
+
+  --text: #fff1ed;
+  --text-secondary: #e8cfca;
+  --text-muted: #a48787;
+
+  --accent: #ff796c;
+  --accent-text: #240a09;
+}
+
+/* =========================================================
+   TROPICAL
+========================================================= */
+
+.theme-tropical {
+  --bg-main: #061817;
+  --bg-panel: #092320;
+  --bg-card: #0c2926;
+  --bg-input: #071b19;
+
+  --border: #194942;
+
+  --text: #edfffa;
+  --text-secondary: #c8e8df;
+  --text-muted: #759d96;
+
+  --accent: #55e8b2;
+  --accent-text: #052017;
+}
+
+/* =========================================================
+   DEEP SPACE
+========================================================= */
+
+.theme-space {
+  --bg-main: #0b0818;
+  --bg-panel: #121025;
+  --bg-card: #16132c;
+  --bg-input: #0d0a1e;
+
+  --border: #312a55;
+
+  --text: #f2efff;
+  --text-secondary: #d3ccef;
+  --text-muted: #8f88ad;
+
+  --accent: #9c7cff;
+  --accent-text: #110a22;
+}
+
+/* =========================================================
+   SUNSET REEF
+========================================================= */
+
+.theme-sunset {
+  --bg-main: #180d1a;
+  --bg-panel: #241225;
+  --bg-card: #2b162a;
+  --bg-input: #1a0c1b;
+
+  --border: #50304d;
+
+  --text: #fff0f4;
+  --text-secondary: #e8d0da;
+  --text-muted: #a88b9b;
+
+  --accent: #ff8b62;
+  --accent-text: #281009;
+}
+
+/* =========================================================
+   PLANTED TANK
+========================================================= */
+
+.theme-planted {
+  --bg-main: #07140d;
+  --bg-panel: #0c1d14;
+  --bg-card: #102419;
+  --bg-input: #09180f;
+
+  --border: #234a32;
+
+  --text: #effff3;
+  --text-secondary: #cce6d2;
+  --text-muted: #779681;
+
+  --accent: #65d98a;
+  --accent-text: #06150b;
+}
+
+/* =========================================================
+   APPLY VARIABLES TO EXISTING UI
+========================================================= */
+
+.app header {
+  background: color-mix(
+    in srgb,
+    var(--bg-main) 88%,
+    transparent
+  );
+
+  border-color: var(--border);
+}
+
+.app aside {
+  border-color: var(--border);
+}
+
+.app .panel,
+.app .metric {
+  background: var(--bg-card);
+  border-color: var(--border);
+}
+
+.app .search {
+  background: var(--bg-input);
+  border-color: var(--border);
+}
+
+.app .tank.sel {
+  background: color-mix(
+    in srgb,
+    var(--accent) 10%,
+    var(--bg-card)
+  );
+
+  border-color: var(--accent);
+}
+
+.app .tankicon {
+  background: color-mix(
+    in srgb,
+    var(--accent) 12%,
+    var(--bg-card)
+  );
+
+  color: var(--accent);
+}
+
+.app .tabs button.active {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.app .tabs {
+  border-color: var(--border);
+}
+
+.app .primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.app .activity {
+  color: var(--accent);
+  border-color: var(--border);
+}
+
+/* =========================================================
+   CARD STYLES
+========================================================= */
+
+.cards-rounded {
+  --card-radius: 17px;
+}
+
+.cards-sharp {
+  --card-radius: 5px;
+}
+
+.cards-sharp .panel,
+.cards-sharp .metric,
+.cards-sharp .tank,
+.cards-sharp .search,
+.cards-sharp .primary,
+.cards-sharp .secondary,
+.cards-sharp .danger,
+.cards-sharp .icon {
+  border-radius: 5px;
+}
+
+/* =========================================================
+   DENSITY
+========================================================= */
+
+.density-compact .tank {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.density-compact .tankicon {
+  width: 31px;
+  height: 31px;
+}
+
+.density-compact .metric {
+  padding: 11px;
+}
+
+.density-compact .panel {
+  padding: 15px;
+}
+
+.density-compact .content {
+  padding-top: 25px;
+  padding-bottom: 40px;
+}
+
+/* =========================================================
+   TEXT SIZE
+========================================================= */
+
+.text-large .tank b {
+  font-size: 14px;
+}
+
+.text-large .tank small {
+  font-size: 12px;
+}
+
+.text-large .metric b {
+  font-size: 24px;
+}
+
+.text-large .muted {
+  font-size: 14px;
+}
+
+.text-large .panelhead h3 {
+  font-size: 19px;
+}
+
+/* =========================================================
+   MOBILE SETTINGS
+========================================================= */
+
+@media (max-width: 600px) {
+  .settings-panel {
+    width: min(390px, 94vw);
+
+    padding: 20px;
+  }
+
+  .theme-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .theme-option {
+    min-height: 72px;
+  }
+
+  .settings-header h2 {
+    font-size: 27px;
+  }
+}
