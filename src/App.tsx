@@ -28,6 +28,7 @@ function App() {
   [changes, setChanges] = useState<WaterChange[]>([]),
   [selected, setSelected] = useState<string | null>(null),
   [tab, setTab] = useState<Tab>("overview"),
+  [menuOpen, setMenuOpen] = useState(false),
   [modal, setModal] = useState<Modal>(null),
   [edit, setEdit] = useState<any>(null),
   [query, setQuery] = useState(""),
@@ -123,6 +124,13 @@ if (error) {
   return (
     <div className="app">
       <header>
+        <button
+  className="menu-button"
+  onClick={() => setMenuOpen(true)}
+  aria-label="Open tank menu"
+>
+  ☰
+</button>
         <div className="brand">
           <span>🐟</span>
           <div>
@@ -140,7 +148,18 @@ if (error) {
         </div>
       </header>
       <main>
-        <aside>
+        <aside className={menuOpen ? "open" : ""}>
+          <div className="mobile-menu-head">
+  <b>Your tanks</b>
+
+  <button
+    className="icon"
+    onClick={() => setMenuOpen(false)}
+    aria-label="Close tank menu"
+  >
+    <X size={18} />
+  </button>
+</div>
           <div className="side-head">
             <div>
               <small>YOUR TANKS</small>
@@ -172,9 +191,10 @@ if (error) {
   }
   draggable
   onClick={() => {
-    setSelected(x.id);
-    setTab("overview");
-  }}
+  setSelected(x.id);
+  setTab("overview");
+  setMenuOpen(false);
+}}
   onDragStart={(e) => {
     setDraggedTankId(x.id);
     e.dataTransfer.effectAllowed = "move";
@@ -213,6 +233,15 @@ if (error) {
               ))
           )}
         </aside>
+
+{menuOpen && (
+  <div
+    className="menu-overlay"
+    onClick={() => setMenuOpen(false)}
+  />
+)}
+
+<section className="content">
         <section className="content">
           {!tank ? (
             <div className="empty">
