@@ -568,7 +568,7 @@ label input:focus {
   }
 
   .menu-overlay {
-  display: block;
+  display: none;
 
     position: fixed;
     z-index: 90;
