@@ -31,74 +31,81 @@ type CardStyle = "rounded" | "sharp";
 type Density = "comfortable" | "compact";
 type TextSize = "normal" | "large";
 
-const num = (v: string) => (v === "" ? null : Number(v));
+const num = (value: string): number | null => {
+  return value === "" ? null : Number(value);
+};
 
-const iso = (v: string) => new Date(v).toISOString();
+const iso = (value: string): string => {
+  return new Date(value).toISOString();
+};
 
-const fmt = (v: string) =>
-  new Intl.DateTimeFormat(undefined, {
+const fmt = (value: string): string => {
+  return new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
-  }).format(new Date(v));
+  }).format(new Date(value));
+};
 
 function App() {
   const [tanks, setTanks] = useState<Tank[]>([]);
   const [params, setParams] = useState<TankParameter[]>([]);
   const [changes, setChanges] = useState<WaterChange[]>([]);
+
   const [selected, setSelected] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("overview");
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [modal, setModal] = useState<Modal>(null);
-  const [edit, setEdit] = useState<any>(null);
-  const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [draggedTankId, setDraggedTankId] = useState<string | null>(null);
 
-  /* SETTINGS */
+  const [menuOpen, setMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window === "undefined") return "ocean";
+  const [modal, setModal] = useState<Modal>(null);
+  const [edit, setEdit] = useState<any>(null);
 
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const [draggedTankId, setDraggedTankId] = useState<string | null>(null);
+
+  /*
+   * =========================================================
+   * SETTINGS
+   * =========================================================
+   */
+
+  const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem("tank-theme");
 
-    return (
-      saved === "ocean" ||
-      saved === "coral" ||
-      saved === "tropical" ||
-      saved === "space" ||
-      saved === "sunset" ||
-      saved === "planted"
-        ? saved
-        : "ocean"
-    );
+    const validThemes: Theme[] = [
+      "ocean",
+      "coral",
+      "tropical",
+      "space",
+      "sunset",
+      "planted",
+    ];
+
+    return saved && validThemes.includes(saved as Theme)
+      ? (saved as Theme)
+      : "ocean";
   });
 
   const [cardStyle, setCardStyle] = useState<CardStyle>(() => {
-    if (typeof window === "undefined") return "rounded";
+    const saved = localStorage.getItem("tank-card-style");
 
-    return localStorage.getItem("tank-card-style") === "sharp"
-      ? "sharp"
-      : "rounded";
+    return saved === "sharp" ? "sharp" : "rounded";
   });
 
   const [density, setDensity] = useState<Density>(() => {
-    if (typeof window === "undefined") return "comfortable";
+    const saved = localStorage.getItem("tank-density");
 
-    return localStorage.getItem("tank-density") === "compact"
-      ? "compact"
-      : "comfortable";
+    return saved === "compact" ? "compact" : "comfortable";
   });
 
   const [textSize, setTextSize] = useState<TextSize>(() => {
-    if (typeof window === "undefined") return "normal";
+    const saved = localStorage.getItem("tank-text-size");
 
-    return localStorage.getItem("tank-text-size") === "large"
-      ? "large"
-      : "normal";
+    return saved === "large" ? "large" : "normal";
   });
 
-  /* SAVE SETTINGS */
   useEffect(() => {
     localStorage.setItem("tank-theme", theme);
   }, [theme]);
@@ -115,40 +122,68 @@ function App() {
     localStorage.setItem("tank-text-size", textSize);
   }, [textSize]);
 
-  /* LOAD DATA */
+  /*
+   * =========================================================
+   * LOAD DATA
+   * =========================================================
+   */
+
   const load = async () => {
     setLoading(true);
 
-    const [t, p, c] = await Promise.all([
-      supabase
-        .from("tanks")
-        .select("*")
-        .order("sort_order", { ascending: true }),
+    const [tankResult, parameterResult, changeResult] =
+      await Promise.all([
+        supabase
+          .from("tanks")
+          .select("*")
+          .order("sort_order", {
+            ascending: true,
+          }),
 
-      supabase
-        .from("tank_parameters")
-        .select("*")
-        .order("measured_at", { ascending: false }),
+        supabase
+          .from("tank_parameters")
+          .select("*")
+          .order("measured_at", {
+            ascending: false,
+          }),
 
-      supabase
-        .from("water_changes")
-        .select("*")
-        .order("completed_at", { ascending: false }),
-    ]);
+        supabase
+          .from("water_changes")
+          .select("*")
+          .order("completed_at", {
+            ascending: false,
+          }),
+      ]);
 
-    if (t.error || p.error || c.error) {
-      alert((t.error || p.error || c.error)?.message);
+    if (
+      tankResult.error ||
+      parameterResult.error ||
+      changeResult.error
+    ) {
+      const error =
+        tankResult.error ||
+        parameterResult.error ||
+        changeResult.error;
+
+      alert(error?.message);
     }
 
-    setTanks((t.data || []) as Tank[]);
-    setParams((p.data || []) as TankParameter[]);
-    setChanges((c.data || []) as WaterChange[]);
+    const loadedTanks = (tankResult.data || []) as Tank[];
 
-    setSelected((s) =>
-      (t.data || []).some((x) => x.id === s)
-        ? s
-        : (t.data || [])[0]?.id || null
-    );
+    setTanks(loadedTanks);
+    setParams((parameterResult.data || []) as TankParameter[]);
+    setChanges((changeResult.data || []) as WaterChange[]);
+
+    setSelected((current) => {
+      if (
+        current &&
+        loadedTanks.some((tank) => tank.id === current)
+      ) {
+        return current;
+      }
+
+      return loadedTanks[0]?.id || null;
+    });
 
     setLoading(false);
   };
@@ -157,60 +192,77 @@ function App() {
     load();
   }, []);
 
-  const tank = tanks.find((x) => x.id === selected) || null;
+  /*
+   * =========================================================
+   * SELECTED TANK DATA
+   * =========================================================
+   */
 
-  const tp = useMemo(
-    () =>
-      params
-        .filter((x) => x.tank_id === selected)
-        .sort(
-          (a, b) =>
-            +new Date(b.measured_at) -
-            +new Date(a.measured_at)
-        ),
-    [params, selected]
-  );
+  const tank = useMemo(() => {
+    return (
+      tanks.find((item) => item.id === selected) || null
+    );
+  }, [tanks, selected]);
 
-  const tc = useMemo(
-    () =>
-      changes
-        .filter((x) => x.tank_id === selected)
-        .sort(
-          (a, b) =>
-            +new Date(b.completed_at) -
-            +new Date(a.completed_at)
-        ),
-    [changes, selected]
-  );
+  const tankParameters = useMemo(() => {
+    return params
+      .filter((item) => item.tank_id === selected)
+      .sort(
+        (a, b) =>
+          +new Date(b.measured_at) -
+          +new Date(a.measured_at)
+      );
+  }, [params, selected]);
 
-  /* REORDER TANKS */
+  const tankChanges = useMemo(() => {
+    return changes
+      .filter((item) => item.tank_id === selected)
+      .sort(
+        (a, b) =>
+          +new Date(b.completed_at) -
+          +new Date(a.completed_at)
+      );
+  }, [changes, selected]);
+
+  /*
+   * =========================================================
+   * TANK REORDERING
+   * =========================================================
+   */
+
   const reorderTanks = async (
     fromIndex: number,
     toIndex: number
   ) => {
-    if (fromIndex === toIndex) return;
+    if (fromIndex === toIndex) {
+      return;
+    }
 
     const reordered = [...tanks];
 
     const [movedTank] = reordered.splice(fromIndex, 1);
 
+    if (!movedTank) {
+      return;
+    }
+
     reordered.splice(toIndex, 0, movedTank);
 
     setTanks(reordered);
 
-    const updates = reordered.map((tank, index) => ({
-      id: tank.id,
+    const updates = reordered.map((item, index) => ({
+      id: item.id,
       sort_order: index,
     }));
 
     const results = await Promise.all(
-      updates.map((tank) =>
+      updates.map((item) =>
         supabase
           .from("tanks")
           .update({
-            sort_order: tank.sort_order,
+            sort_order: item.sort_order,
           })
-          .eq("id", tank.id)
+          .eq("id", item.id)
       )
     );
 
@@ -227,12 +279,19 @@ function App() {
     }
   };
 
-  /* DELETE */
+  /*
+   * =========================================================
+   * DELETE
+   * =========================================================
+   */
+
   const del = async (
     table: string,
     id: string
   ) => {
-    if (!confirm("Delete this record?")) return;
+    if (!confirm("Delete this record?")) {
+      return;
+    }
 
     const { error } = await supabase
       .from(table)
@@ -241,25 +300,50 @@ function App() {
 
     if (error) {
       alert(error.message);
-    } else {
-      load();
+      return;
     }
+
+    await load();
   };
 
-  /* OPEN MODAL */
+  /*
+   * =========================================================
+   * OPEN MODAL
+   * =========================================================
+   */
+
   const open = (
-    m: Modal,
-    x: any = null
+    modalType: Modal,
+    row: any = null
   ) => {
-    setEdit(x);
-    setModal(m);
+    setEdit(row);
+    setModal(modalType);
   };
+
+  const closeModal = () => {
+    setModal(null);
+    setEdit(null);
+  };
+
+  /*
+   * =========================================================
+   * RENDER
+   * =========================================================
+   */
 
   return (
     <div
-      className={`app theme-${theme} cards-${cardStyle} density-${density} text-${textSize}`}
+      className={[
+        "app",
+        `theme-${theme}`,
+        `cards-${cardStyle}`,
+        `density-${density}`,
+        `text-${textSize}`,
+      ].join(" ")}
     >
-      {/* HEADER */}
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
 
       <header>
         <button
@@ -282,10 +366,9 @@ function App() {
         <div className="actions">
           <button
             className="icon settings-button"
-            onClick={() =>
-              setSettingsOpen(true)
-            }
+            onClick={() => setSettingsOpen(true)}
             aria-label="Open settings"
+            title="Settings"
           >
             <Settings size={17} />
           </button>
@@ -294,6 +377,7 @@ function App() {
             onClick={load}
             className="icon"
             aria-label="Refresh"
+            title="Refresh"
           >
             <RefreshCw size={17} />
           </button>
@@ -308,24 +392,22 @@ function App() {
         </div>
       </header>
 
-      {/* MAIN */}
+      {/* =====================================================
+          MAIN
+      ===================================================== */}
 
       <main>
-        {/* TANK MENU */}
+        {/* ===================================================
+            TANK SIDEBAR
+        =================================================== */}
 
-        <aside
-          className={
-            menuOpen ? "open" : ""
-          }
-        >
+        <aside className={menuOpen ? "open" : ""}>
           <div className="mobile-menu-head">
             <b>Your tanks</b>
 
             <button
               className="icon"
-              onClick={() =>
-                setMenuOpen(false)
-              }
+              onClick={() => setMenuOpen(false)}
               aria-label="Close tank menu"
             >
               <X size={18} />
@@ -352,81 +434,86 @@ function App() {
 
             <input
               value={query}
-              onChange={(e) =>
-                setQuery(e.target.value)
+              onChange={(event) =>
+                setQuery(event.target.value)
               }
               placeholder="Find a tank..."
+              aria-label="Find a tank"
             />
           </div>
 
           {loading ? (
+            <p className="muted">Loading…</p>
+          ) : tanks.length === 0 ? (
             <p className="muted">
-              Loading…
+              No tanks yet.
             </p>
           ) : (
             tanks
-              .filter((x) =>
-                x.name
+              .filter((item) =>
+                item.name
                   .toLowerCase()
                   .includes(
                     query.toLowerCase()
                   )
               )
-              .map((x) => (
+              .map((item) => (
                 <button
-                  key={x.id}
-                  className={
-                    "tank " +
-                    (x.id === selected
-                      ? "sel "
-                      : "") +
-                    (draggedTankId === x.id
+                  key={item.id}
+                  className={[
+                    "tank",
+                    item.id === selected
+                      ? "sel"
+                      : "",
+                    draggedTankId === item.id
                       ? "dragging"
-                      : "")
-                  }
+                      : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
                   draggable
                   onClick={() => {
-                    setSelected(x.id);
+                    setSelected(item.id);
                     setTab("overview");
                     setMenuOpen(false);
                   }}
-                  onDragStart={(e) => {
-                    setDraggedTankId(x.id);
+                  onDragStart={(event) => {
+                    setDraggedTankId(item.id);
 
-                    e.dataTransfer.effectAllowed =
+                    event.dataTransfer.effectAllowed =
                       "move";
 
-                    e.dataTransfer.setData(
+                    event.dataTransfer.setData(
                       "text/plain",
-                      x.id
+                      item.id
                     );
                   }}
-                  onDragOver={(e) => {
-                    e.preventDefault();
+                  onDragOver={(event) => {
+                    event.preventDefault();
 
-                    e.dataTransfer.dropEffect =
+                    event.dataTransfer.dropEffect =
                       "move";
                   }}
-                  onDrop={(e) => {
-                    e.preventDefault();
+                  onDrop={(event) => {
+                    event.preventDefault();
 
                     const draggedId =
-                      e.dataTransfer.getData(
+                      event.dataTransfer.getData(
                         "text/plain"
                       );
 
                     const fromIndex =
                       tanks.findIndex(
-                        (tank) =>
-                          tank.id ===
+                        (tankItem) =>
+                          tankItem.id ===
                           draggedId
                       );
 
                     const toIndex =
                       tanks.findIndex(
-                        (tank) =>
-                          tank.id ===
-                          x.id
+                        (tankItem) =>
+                          tankItem.id ===
+                          item.id
                       );
 
                     if (
@@ -450,11 +537,11 @@ function App() {
                   </span>
 
                   <span>
-                    <b>{x.name}</b>
+                    <b>{item.name}</b>
 
                     <small>
-                      {x.volume
-                        ? x.volume + " L"
+                      {item.volume
+                        ? `${item.volume} L`
                         : "No volume"}
                     </small>
                   </span>
@@ -465,18 +552,21 @@ function App() {
           )}
         </aside>
 
-        {/* MOBILE MENU OVERLAY */}
+        {/* ===================================================
+            MOBILE SIDEBAR OVERLAY
+        =================================================== */}
 
         {menuOpen && (
           <div
             className="menu-overlay"
-            onClick={() =>
-              setMenuOpen(false)
-            }
+            onClick={() => setMenuOpen(false)}
+            aria-hidden="true"
           />
         )}
 
-        {/* CONTENT */}
+        {/* ===================================================
+            CONTENT
+        =================================================== */}
 
         <section className="content">
           {!tank ? (
@@ -496,9 +586,7 @@ function App() {
 
               <button
                 className="primary"
-                onClick={() =>
-                  open("tank")
-                }
+                onClick={() => open("tank")}
               >
                 <Plus size={17} />
                 Add your first tank
@@ -506,7 +594,9 @@ function App() {
             </div>
           ) : (
             <>
-              {/* TANK HEADER */}
+              {/* =========================================
+                  TANK HEADER
+              ========================================= */}
 
               <div className="head">
                 <div>
@@ -520,8 +610,7 @@ function App() {
                       : "Volume not set"}
 
                     {tank.notes
-                      ? " · " +
-                        tank.notes
+                      ? ` · ${tank.notes}`
                       : ""}
                   </p>
                 </div>
@@ -530,10 +619,7 @@ function App() {
                   <button
                     className="secondary"
                     onClick={() =>
-                      open(
-                        "tank",
-                        tank
-                      )
+                      open("tank", tank)
                     }
                   >
                     <Pencil size={15} />
@@ -548,13 +634,17 @@ function App() {
                         tank.id
                       )
                     }
+                    aria-label="Delete tank"
+                    title="Delete tank"
                   >
                     <Trash2 size={15} />
                   </button>
                 </div>
               </div>
 
-              {/* TABS */}
+              {/* =========================================
+                  TABS
+              ========================================= */}
 
               <div className="tabs">
                 {(
@@ -563,39 +653,39 @@ function App() {
                     "parameters",
                     "changes",
                   ] as Tab[]
-                ).map((x) => (
+                ).map((tabName) => (
                   <button
-                    key={x}
+                    key={tabName}
                     className={
-                      tab === x
+                      tab === tabName
                         ? "active"
                         : ""
                     }
                     onClick={() =>
-                      setTab(x)
+                      setTab(tabName)
                     }
                   >
-                    {x === "overview"
+                    {tabName === "overview"
                       ? "◉"
-                      : x ===
+                      : tabName ===
                         "parameters"
                       ? "🧪"
                       : "💧"}{" "}
-                    {x}
+                    {tabName}
                   </button>
                 ))}
               </div>
 
-              {/* OVERVIEW */}
+              {/* =========================================
+                  OVERVIEW
+              ========================================= */}
 
               {tab === "overview" && (
                 <Overview
-                  p={tp[0]}
-                  c={tc}
+                  p={tankParameters[0]}
+                  c={tankChanges}
                   goP={() =>
-                    setTab(
-                      "parameters"
-                    )
+                    setTab("parameters")
                   }
                   goC={() =>
                     setTab("changes")
@@ -603,26 +693,28 @@ function App() {
                 />
               )}
 
-              {/* PARAMETERS */}
+              {/* =========================================
+                  PARAMETERS
+              ========================================= */}
 
               {tab === "parameters" && (
                 <Parameters
-                  rows={tp}
+                  rows={tankParameters}
                   add={() =>
-                    open(
-                      "parameter"
-                    )
+                    open("parameter")
                   }
                   edit={open}
                   del={del}
                 />
               )}
 
-              {/* WATER CHANGES */}
+              {/* =========================================
+                  WATER CHANGES
+              ========================================= */}
 
               {tab === "changes" && (
                 <Changes
-                  rows={tc}
+                  rows={tankChanges}
                   add={() =>
                     open("change")
                   }
@@ -635,58 +727,50 @@ function App() {
         </section>
       </main>
 
-      {/* MODALS */}
+      {/* =====================================================
+          MODALS
+      ===================================================== */}
 
       {modal === "tank" && (
         <TankModal
           row={edit}
-          close={() =>
-            setModal(null)
-          }
+          close={closeModal}
           done={load}
         />
       )}
 
-      {modal === "parameter" &&
-        tank && (
-          <ParameterModal
-            tank={tank.id}
-            row={edit}
-            close={() =>
-              setModal(null)
-            }
-            done={load}
-          />
-        )}
+      {modal === "parameter" && tank && (
+        <ParameterModal
+          tank={tank.id}
+          row={edit}
+          close={closeModal}
+          done={load}
+        />
+      )}
 
-      {modal === "change" &&
-        tank && (
-          <ChangeModal
-            tank={tank.id}
-            row={edit}
-            close={() =>
-              setModal(null)
-            }
-            done={load}
-          />
-        )}
+      {modal === "change" && tank && (
+        <ChangeModal
+          tank={tank.id}
+          row={edit}
+          close={closeModal}
+          done={load}
+        />
+      )}
 
-      {/* SETTINGS */}
+      {/* =====================================================
+          SETTINGS
+      ===================================================== */}
 
       {settingsOpen && (
         <SettingsPanel
           theme={theme}
           setTheme={setTheme}
           cardStyle={cardStyle}
-          setCardStyle={
-            setCardStyle
-          }
+          setCardStyle={setCardStyle}
           density={density}
           setDensity={setDensity}
           textSize={textSize}
-          setTextSize={
-            setTextSize
-          }
+          setTextSize={setTextSize}
           close={() =>
             setSettingsOpen(false)
           }
@@ -714,17 +798,11 @@ function SettingsPanel({
   theme: Theme;
   setTheme: (value: Theme) => void;
   cardStyle: CardStyle;
-  setCardStyle: (
-    value: CardStyle
-  ) => void;
+  setCardStyle: (value: CardStyle) => void;
   density: Density;
-  setDensity: (
-    value: Density
-  ) => void;
+  setDensity: (value: Density) => void;
   textSize: TextSize;
-  setTextSize: (
-    value: TextSize
-  ) => void;
+  setTextSize: (value: TextSize) => void;
   close: () => void;
 }) {
   const themes: {
@@ -737,43 +815,37 @@ function SettingsPanel({
       id: "ocean",
       name: "Deep Ocean",
       emoji: "🌊",
-      description:
-        "Classic aquarium blue",
+      description: "Classic aquarium blue",
     },
     {
       id: "coral",
       name: "Coral Reef",
       emoji: "🪸",
-      description:
-        "Warm coral reef colours",
+      description: "Warm coral reef colours",
     },
     {
       id: "tropical",
       name: "Tropical",
       emoji: "🐠",
-      description:
-        "Bright tropical water",
+      description: "Bright tropical water",
     },
     {
       id: "space",
       name: "Deep Space",
       emoji: "🌌",
-      description:
-        "Neon cosmic aquarium",
+      description: "Neon cosmic aquarium",
     },
     {
       id: "sunset",
       name: "Sunset Reef",
       emoji: "🌅",
-      description:
-        "Purple, pink and orange",
+      description: "Purple, pink and orange",
     },
     {
       id: "planted",
       name: "Planted Tank",
       emoji: "🌿",
-      description:
-        "Natural green aquarium",
+      description: "Natural green aquarium",
     },
   ];
 
@@ -784,16 +856,13 @@ function SettingsPanel({
     >
       <aside
         className="settings-panel"
-        onClick={(e) =>
-          e.stopPropagation()
+        onClick={(event) =>
+          event.stopPropagation()
         }
       >
         <div className="settings-header">
           <div>
-            <small>
-              PERSONALISE
-            </small>
-
+            <small>PERSONALISE</small>
             <h2>Settings</h2>
           </div>
 
@@ -806,7 +875,9 @@ function SettingsPanel({
           </button>
         </div>
 
-        {/* THEME */}
+        {/* ===============================================
+            THEMES
+        =============================================== */}
 
         <div className="settings-section">
           <div className="settings-section-title">
@@ -815,33 +886,37 @@ function SettingsPanel({
           </div>
 
           <div className="theme-grid">
-            {themes.map((x) => (
+            {themes.map((item) => (
               <button
-                key={x.id}
-                className={`theme-option ${
-                  theme === x.id
+                key={item.id}
+                className={[
+                  "theme-option",
+                  theme === item.id
                     ? "selected"
-                    : ""
-                }`}
+                    : "",
+                ].join(" ")}
                 onClick={() =>
-                  setTheme(x.id)
+                  setTheme(item.id)
                 }
               >
                 <span
-                  className={`theme-preview preview-${x.id}`}
+                  className={[
+                    "theme-preview",
+                    `preview-${item.id}`,
+                  ].join(" ")}
                 >
-                  {x.emoji}
+                  {item.emoji}
                 </span>
 
                 <span className="theme-info">
-                  <b>{x.name}</b>
+                  <b>{item.name}</b>
 
                   <small>
-                    {x.description}
+                    {item.description}
                   </small>
                 </span>
 
-                {theme === x.id && (
+                {theme === item.id && (
                   <span className="theme-check">
                     <Check size={14} />
                   </span>
@@ -851,28 +926,27 @@ function SettingsPanel({
           </div>
         </div>
 
-        {/* CARD STYLE */}
+        {/* ===============================================
+            CARD STYLE
+        =============================================== */}
 
         <div className="settings-section">
           <div className="settings-section-title">
             <span>▦</span>
-            <span>
-              Card style
-            </span>
+            <span>Card style</span>
           </div>
 
           <div className="choice-row">
             <button
-              className={
+              className={[
+                "choice",
                 cardStyle ===
                 "rounded"
-                  ? "choice active"
-                  : "choice"
-              }
+                  ? "active"
+                  : "",
+              ].join(" ")}
               onClick={() =>
-                setCardStyle(
-                  "rounded"
-                )
+                setCardStyle("rounded")
               }
             >
               <span className="choice-icon rounded-demo" />
@@ -886,16 +960,14 @@ function SettingsPanel({
             </button>
 
             <button
-              className={
-                cardStyle ===
-                "sharp"
-                  ? "choice active"
-                  : "choice"
-              }
+              className={[
+                "choice",
+                cardStyle === "sharp"
+                  ? "active"
+                  : "",
+              ].join(" ")}
               onClick={() =>
-                setCardStyle(
-                  "sharp"
-                )
+                setCardStyle("sharp")
               }
             >
               <span className="choice-icon sharp-demo" />
@@ -910,28 +982,25 @@ function SettingsPanel({
           </div>
         </div>
 
-        {/* DENSITY */}
+        {/* ===============================================
+            DENSITY
+        =============================================== */}
 
         <div className="settings-section">
           <div className="settings-section-title">
             <span>↕</span>
-            <span>
-              Layout density
-            </span>
+            <span>Layout density</span>
           </div>
 
           <div className="segmented">
             <button
               className={
-                density ===
-                "comfortable"
+                density === "comfortable"
                   ? "active"
                   : ""
               }
               onClick={() =>
-                setDensity(
-                  "comfortable"
-                )
+                setDensity("comfortable")
               }
             >
               Comfortable
@@ -939,15 +1008,12 @@ function SettingsPanel({
 
             <button
               className={
-                density ===
-                "compact"
+                density === "compact"
                   ? "active"
                   : ""
               }
               onClick={() =>
-                setDensity(
-                  "compact"
-                )
+                setDensity("compact")
               }
             >
               Compact
@@ -955,28 +1021,25 @@ function SettingsPanel({
           </div>
         </div>
 
-        {/* TEXT SIZE */}
+        {/* ===============================================
+            TEXT SIZE
+        =============================================== */}
 
         <div className="settings-section">
           <div className="settings-section-title">
             <span>A</span>
-            <span>
-              Text size
-            </span>
+            <span>Text size</span>
           </div>
 
           <div className="segmented">
             <button
               className={
-                textSize ===
-                "normal"
+                textSize === "normal"
                   ? "active"
                   : ""
               }
               onClick={() =>
-                setTextSize(
-                  "normal"
-                )
+                setTextSize("normal")
               }
             >
               Normal
@@ -984,15 +1047,12 @@ function SettingsPanel({
 
             <button
               className={
-                textSize ===
-                "large"
+                textSize === "large"
                   ? "active"
                   : ""
               }
               onClick={() =>
-                setTextSize(
-                  "large"
-                )
+                setTextSize("large")
               }
             >
               Large
@@ -1000,17 +1060,18 @@ function SettingsPanel({
           </div>
         </div>
 
+        {/* ===============================================
+            FOOTER
+        =============================================== */}
+
         <div className="settings-footer">
           <span>🐟</span>
 
           <div>
-            <b>
-              Tank Tracker
-            </b>
+            <b>Tank Tracker</b>
 
             <small>
-              Your aquarium,
-              your style.
+              Your aquarium, your style.
             </small>
           </div>
         </div>
@@ -1034,20 +1095,15 @@ function Overview({
   goP: () => void;
   goC: () => void;
 }) {
-  const a: [
+  const metrics: [
     string,
     any,
     string
   ][] = [
-    [
-      "pH",
-      p?.ph ?? null,
-      "",
-    ],
+    ["pH", p?.ph ?? null, ""],
     [
       "Temperature",
-      p?.temperature ??
-        null,
+      p?.temperature ?? null,
       "°C",
     ],
     [
@@ -1082,8 +1138,7 @@ function Overview({
     ],
     [
       "Salinity",
-      p?.salinity ??
-        null,
+      p?.salinity ?? null,
       "",
     ],
   ];
@@ -1091,19 +1146,19 @@ function Overview({
   return (
     <>
       <div className="metrics">
-        {a.map((x) => (
+        {metrics.map((metric) => (
           <div
             className="metric"
-            key={x[0]}
+            key={metric[0]}
           >
             <small>
-              {x[0]}
+              {metric[0]}
             </small>
 
             <b>
-              {x[1] == null
+              {metric[1] == null
                 ? "—"
-                : x[1] + x[2]}
+                : `${metric[1]}${metric[2]}`}
             </b>
           </div>
         ))}
@@ -1113,9 +1168,7 @@ function Overview({
         <div className="panel">
           <div className="panelhead">
             <div>
-              <small>
-                LATEST
-              </small>
+              <small>LATEST</small>
 
               <h3>
                 Water parameters
@@ -1129,10 +1182,9 @@ function Overview({
 
           <p className="muted">
             {p
-              ? "Last tested " +
-                fmt(
+              ? `Last tested ${fmt(
                   p.measured_at
-                )
+                )}`
               : "No parameter logs yet."}
           </p>
         </div>
@@ -1140,9 +1192,7 @@ function Overview({
         <div className="panel">
           <div className="panelhead">
             <div>
-              <small>
-                RECENT
-              </small>
+              <small>RECENT</small>
 
               <h3>
                 Water changes
@@ -1156,26 +1206,24 @@ function Overview({
 
           {c
             .slice(0, 3)
-            .map((x) => (
+            .map((item) => (
               <div
                 className="activity"
-                key={x.id}
+                key={item.id}
               >
-                <Droplets
-                  size={16}
-                />
+                <Droplets size={16} />
 
                 <span>
                   <b>
                     {
-                      x.amount_changed_liters
+                      item.amount_changed_liters
                     }{" "}
                     L
                   </b>
 
                   <small>
                     {fmt(
-                      x.completed_at
+                      item.completed_at
                     )}
                   </small>
                 </span>
@@ -1206,11 +1254,11 @@ function Parameters({
   rows: TankParameter[];
   add: () => void;
   edit: (
-    m: Modal,
-    x: any
+    modal: Modal,
+    row: any
   ) => void;
   del: (
-    t: string,
+    table: string,
     id: string
   ) => void;
 }) {
@@ -1235,40 +1283,32 @@ function Parameters({
           "TDS",
           "",
         ]}
-        rows={rows.map(
-          (x) => [
-            fmt(
-              x.measured_at
-            ),
-            x.temperature ??
-              "—",
-            x.ph ?? "—",
-            x.ammonia ??
-              "—",
-            x.nitrite ??
-              "—",
-            x.nitrate ??
-              "—",
-            x.gh ?? "—",
-            x.kh ?? "—",
-            x.tds ?? "—",
-            <Actions
-              key={x.id}
-              onEdit={() =>
-                edit(
-                  "parameter",
-                  x
-                )
-              }
-              onDelete={() =>
-                del(
-                  "tank_parameters",
-                  x.id
-                )
-              }
-            />,
-          ]
-        )}
+        rows={rows.map((item) => [
+          fmt(item.measured_at),
+          item.temperature ?? "—",
+          item.ph ?? "—",
+          item.ammonia ?? "—",
+          item.nitrite ?? "—",
+          item.nitrate ?? "—",
+          item.gh ?? "—",
+          item.kh ?? "—",
+          item.tds ?? "—",
+          <Actions
+            key={item.id}
+            onEdit={() =>
+              edit(
+                "parameter",
+                item
+              )
+            }
+            onDelete={() =>
+              del(
+                "tank_parameters",
+                item.id
+              )
+            }
+          />,
+        ])}
       />
     </div>
   );
@@ -1287,11 +1327,11 @@ function Changes({
   rows: WaterChange[];
   add: () => void;
   edit: (
-    m: Modal,
-    x: any
+    modal: Modal,
+    row: any
   ) => void;
   del: (
-    t: string,
+    table: string,
     id: string
   ) => void;
 }) {
@@ -1315,42 +1355,32 @@ function Changes({
           "Notes",
           "",
         ]}
-        rows={rows.map(
-          (x) => [
-            fmt(
-              x.completed_at
-            ),
-            x.amount_changed_liters +
-              " L",
-            x.added_water_temperature ??
-              "—",
-            x.added_water_ph ??
-              "—",
-            x.added_water_gh ??
-              "—",
-            x.added_water_kh ??
-              "—",
-            x.added_water_tds ??
-              "—",
-            x.added_water_notes ||
-              "—",
-            <Actions
-              key={x.id}
-              onEdit={() =>
-                edit(
-                  "change",
-                  x
-                )
-              }
-              onDelete={() =>
-                del(
-                  "water_changes",
-                  x.id
-                )
-              }
-            />,
-          ]
-        )}
+        rows={rows.map((item) => [
+          fmt(item.completed_at),
+          `${item.amount_changed_liters} L`,
+          item.added_water_temperature ??
+            "—",
+          item.added_water_ph ?? "—",
+          item.added_water_gh ?? "—",
+          item.added_water_kh ?? "—",
+          item.added_water_tds ?? "—",
+          item.added_water_notes || "—",
+          <Actions
+            key={item.id}
+            onEdit={() =>
+              edit(
+                "change",
+                item
+              )
+            }
+            onDelete={() =>
+              del(
+                "water_changes",
+                item.id
+              )
+            }
+          />,
+        ])}
       />
     </div>
   );
@@ -1400,6 +1430,7 @@ function Actions({
       <button
         onClick={onEdit}
         aria-label="Edit"
+        title="Edit"
       >
         <Pencil size={14} />
       </button>
@@ -1407,6 +1438,7 @@ function Actions({
       <button
         onClick={onDelete}
         aria-label="Delete"
+        title="Delete"
       >
         <Trash2 size={14} />
       </button>
@@ -1430,22 +1462,22 @@ function Table({
       <table>
         <thead>
           <tr>
-            {heads.map((h, i) => (
+            {heads.map((head, index) => (
               <th
-                key={`${h}-${i}`}
+                key={`${head}-${index}`}
               >
-                {h}
+                {head}
               </th>
             ))}
           </tr>
         </thead>
 
         <tbody>
-          {rows.map((r, i) => (
-            <tr key={i}>
-              {r.map((x, j) => (
-                <td key={j}>
-                  {x}
+          {rows.map((row, rowIndex) => (
+            <tr key={rowIndex}>
+              {row.map((cell, cellIndex) => (
+                <td key={cellIndex}>
+                  {cell}
                 </td>
               ))}
             </tr>
@@ -1463,7 +1495,7 @@ function Table({
 }
 
 /* =========================================================
-   MODAL
+   BASE MODAL
 ========================================================= */
 
 function Modal({
@@ -1486,9 +1518,7 @@ function Modal({
           <X size={18} />
         </button>
 
-        <small>
-          TANK TRACKER
-        </small>
+        <small>TANK TRACKER</small>
 
         <h2>{title}</h2>
 
@@ -1510,7 +1540,7 @@ function Field({
 }: {
   label: string;
   value: any;
-  set: (v: any) => void;
+  set: (value: any) => void;
   type?: string;
 }) {
   return (
@@ -1520,15 +1550,14 @@ function Field({
       <input
         type={type}
         value={value ?? ""}
-        onChange={(e) =>
-          set(
+        onChange={(event) => {
+          const value =
             type === "number"
-              ? num(
-                  e.target.value
-                )
-              : e.target.value
-          )
-        }
+              ? num(event.target.value)
+              : event.target.value;
+
+          set(value);
+        }}
       />
     </label>
   );
@@ -1547,7 +1576,7 @@ function TankModal({
   close: () => void;
   done: () => Promise<void>;
 }) {
-  const [f, setF] =
+  const [form, setForm] =
     useState<any>(
       row
         ? {
@@ -1569,49 +1598,34 @@ function TankModal({
     );
 
   const save = async (
-    e: React.FormEvent
+    event: React.FormEvent
   ) => {
-    e.preventDefault();
+    event.preventDefault();
 
-    if (!f.name?.trim()) {
-      alert(
-        "Please enter a tank name."
-      );
+    if (!form.name?.trim()) {
+      alert("Please enter a tank name.");
       return;
     }
 
-    const payload = {
-      name: f.name.trim(),
-      volume: f.volume,
-      height: f.height,
-      width: f.width,
-      depth: f.depth,
-      notes: f.notes,
-    };
-
-    const q = row
+    const query = row
       ? supabase
           .from("tanks")
-          .update(payload)
-          .eq(
-            "id",
-            row.id
-          )
+          .update(form)
+          .eq("id", row.id)
       : supabase
           .from("tanks")
-          .insert(
-            payload
-          );
+          .insert(form);
 
-    const { error } =
-      await q;
+    const { error } = await query;
 
     if (error) {
       alert(error.message);
-    } else {
-      close();
-      await done();
+      return;
     }
+
+    close();
+
+    await done();
   };
 
   return (
@@ -1626,58 +1640,44 @@ function TankModal({
       <form onSubmit={save}>
         <Field
           label="Tank name"
-          value={f.name}
-          set={(v) =>
-            setF({
-              ...f,
-              name: v,
+          value={form.name}
+          set={(value) =>
+            setForm({
+              ...form,
+              name: value,
             })
           }
         />
 
         <div className="formgrid">
           {[
-            [
-              "Volume (L)",
-              "volume",
-            ],
-            [
-              "Height",
-              "height",
-            ],
-            [
-              "Width",
-              "width",
-            ],
-            [
-              "Depth",
-              "depth",
-            ],
-          ].map(
-            ([l, k]) => (
-              <Field
-                key={k}
-                label={l}
-                value={f[k]}
-                type="number"
-                set={(v) =>
-                  setF({
-                    ...f,
-                    [k]: v,
-                  })
-                }
-              />
-            )
-          )}
+            ["Volume (L)", "volume"],
+            ["Height", "height"],
+            ["Width", "width"],
+            ["Depth", "depth"],
+          ].map(([label, key]) => (
+            <Field
+              key={key}
+              label={label}
+              value={form[key]}
+              type="number"
+              set={(value) =>
+                setForm({
+                  ...form,
+                  [key]: value,
+                })
+              }
+            />
+          ))}
         </div>
 
         <Field
           label="Notes"
-          value={f.notes}
-          set={(v) =>
-            setF({
-              ...f,
-              notes: v,
+          value={form.notes}
+          set={(value) =>
+            setForm({
+              ...form,
+              notes: value,
             })
           }
         />
@@ -1703,7 +1703,7 @@ function ParameterModal({
   close: () => void;
   done: () => Promise<void>;
 }) {
-  const d = row
+  const initialForm = row
     ? {
         measured_at:
           row.measured_at,
@@ -1738,42 +1738,36 @@ function ParameterModal({
         notes: "",
       };
 
-  const [f, setF] =
-    useState<any>(d);
+  const [form, setForm] =
+    useState<any>(initialForm);
 
   const save = async (
-    e: React.FormEvent
+    event: React.FormEvent
   ) => {
-    e.preventDefault();
+    event.preventDefault();
 
-    const q = row
+    const query = row
       ? supabase
-          .from(
-            "tank_parameters"
-          )
-          .update(f)
-          .eq(
-            "id",
-            row.id
-          )
+          .from("tank_parameters")
+          .update(form)
+          .eq("id", row.id)
       : supabase
-          .from(
-            "tank_parameters"
-          )
+          .from("tank_parameters")
           .insert({
-            ...f,
+            ...form,
             tank_id: tank,
           });
 
-    const { error } =
-      await q;
+    const { error } = await query;
 
     if (error) {
       alert(error.message);
-    } else {
-      close();
-      await done();
+      return;
     }
+
+    close();
+
+    await done();
   };
 
   return (
@@ -1789,16 +1783,16 @@ function ParameterModal({
         <Field
           label="Measured at"
           value={new Date(
-            f.measured_at
+            form.measured_at
           )
             .toISOString()
             .slice(0, 16)}
           type="datetime-local"
-          set={(v) =>
-            setF({
-              ...f,
+          set={(value) =>
+            setForm({
+              ...form,
               measured_at:
-                iso(v),
+                iso(value),
             })
           }
         />
@@ -1810,50 +1804,36 @@ function ParameterModal({
               "temperature",
             ],
             ["pH", "ph"],
-            [
-              "Ammonia",
-              "ammonia",
-            ],
-            [
-              "Nitrite",
-              "nitrite",
-            ],
-            [
-              "Nitrate",
-              "nitrate",
-            ],
+            ["Ammonia", "ammonia"],
+            ["Nitrite", "nitrite"],
+            ["Nitrate", "nitrate"],
             ["GH", "gh"],
             ["KH", "kh"],
             ["TDS", "tds"],
-            [
-              "Salinity",
-              "salinity",
-            ],
-          ].map(
-            ([l, k]) => (
-              <Field
-                key={k}
-                label={l}
-                value={f[k]}
-                type="number"
-                set={(v) =>
-                  setF({
-                    ...f,
-                    [k]: v,
-                  })
-                }
-              />
-            )
-          )}
+            ["Salinity", "salinity"],
+          ].map(([label, key]) => (
+            <Field
+              key={key}
+              label={label}
+              value={form[key]}
+              type="number"
+              set={(value) =>
+                setForm({
+                  ...form,
+                  [key]: value,
+                })
+              }
+            />
+          ))}
         </div>
 
         <Field
           label="Notes"
-          value={f.notes}
-          set={(v) =>
-            setF({
-              ...f,
-              notes: v,
+          value={form.notes}
+          set={(value) =>
+            setForm({
+              ...form,
+              notes: value,
             })
           }
         />
@@ -1879,33 +1859,29 @@ function ChangeModal({
   close: () => void;
   done: () => Promise<void>;
 }) {
-  const base: any = {
+  const base = {
     completed_at:
       new Date().toISOString(),
+
     amount_changed_liters: 0,
+
     added_water_temperature:
       null,
-    added_water_ph:
-      null,
-    added_water_ammonia:
-      null,
-    added_water_nitrite:
-      null,
-    added_water_nitrate:
-      null,
-    added_water_gh:
-      null,
-    added_water_kh:
-      null,
-    added_water_tds:
-      null,
-    added_water_salinity:
-      null,
-    added_water_notes:
-      "",
+
+    added_water_ph: null,
+    added_water_ammonia: null,
+    added_water_nitrite: null,
+    added_water_nitrate: null,
+
+    added_water_gh: null,
+    added_water_kh: null,
+    added_water_tds: null,
+    added_water_salinity: null,
+
+    added_water_notes: "",
   };
 
-  const [f, setF] =
+  const [form, setForm] =
     useState<any>(
       row
         ? { ...row }
@@ -1913,46 +1889,40 @@ function ChangeModal({
     );
 
   const save = async (
-    e: React.FormEvent
+    event: React.FormEvent
   ) => {
-    e.preventDefault();
+    event.preventDefault();
 
     const payload = {
-      ...f,
+      ...form,
     };
 
     delete payload.id;
     delete payload.created_at;
     delete payload.tank_id;
 
-    const q = row
+    const query = row
       ? supabase
-          .from(
-            "water_changes"
-          )
+          .from("water_changes")
           .update(payload)
-          .eq(
-            "id",
-            row.id
-          )
+          .eq("id", row.id)
       : supabase
-          .from(
-            "water_changes"
-          )
+          .from("water_changes")
           .insert({
             ...payload,
             tank_id: tank,
           });
 
-    const { error } =
-      await q;
+    const { error } = await query;
 
     if (error) {
       alert(error.message);
-    } else {
-      close();
-      await done();
+      return;
     }
+
+    close();
+
+    await done();
   };
 
   return (
@@ -1969,16 +1939,16 @@ function ChangeModal({
           <Field
             label="Completed at"
             value={new Date(
-              f.completed_at
+              form.completed_at
             )
               .toISOString()
               .slice(0, 16)}
             type="datetime-local"
-            set={(v) =>
-              setF({
-                ...f,
+            set={(value) =>
+              setForm({
+                ...form,
                 completed_at:
-                  iso(v),
+                  iso(value),
               })
             }
           />
@@ -1986,14 +1956,14 @@ function ChangeModal({
           <Field
             label="Amount changed (L)"
             value={
-              f.amount_changed_liters
+              form.amount_changed_liters
             }
             type="number"
-            set={(v) =>
-              setF({
-                ...f,
+            set={(value) =>
+              setForm({
+                ...form,
                 amount_changed_liters:
-                  v,
+                  value,
               })
             }
           />
@@ -2041,34 +2011,32 @@ function ChangeModal({
               "Salinity",
               "added_water_salinity",
             ],
-          ].map(
-            ([l, k]) => (
-              <Field
-                key={k}
-                label={l}
-                value={f[k]}
-                type="number"
-                set={(v) =>
-                  setF({
-                    ...f,
-                    [k]: v,
-                  })
-                }
-              />
-            )
-          )}
+          ].map(([label, key]) => (
+            <Field
+              key={key}
+              label={label}
+              value={form[key]}
+              type="number"
+              set={(value) =>
+                setForm({
+                  ...form,
+                  [key]: value,
+                })
+              }
+            />
+          ))}
         </div>
 
         <Field
           label="Notes"
           value={
-            f.added_water_notes
+            form.added_water_notes
           }
-          set={(v) =>
-            setF({
-              ...f,
+          set={(value) =>
+            setForm({
+              ...form,
               added_water_notes:
-                v,
+                value,
             })
           }
         />
