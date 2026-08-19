@@ -94,14 +94,21 @@ function App() {
     sort_order: index,
   }));
 
-  const { error } = await supabase
-    .from("tanks")
-    .upsert(updates, { onConflict: "id" });
+  const results = await Promise.all(
+  updates.map((tank) =>
+    supabase
+      .from("tanks")
+      .update({ sort_order: tank.sort_order })
+      .eq("id", tank.id)
+  )
+);
 
-  if (error) {
-    alert(`Could not save tank order: ${error.message}`);
-    await load();
-  }
+const error = results.find((result) => result.error)?.error;
+
+if (error) {
+  alert(`Could not save tank order: ${error.message}`);
+  await load();
+}
 };
   const del = async (table: string, id: string) => {
     if (!confirm("Delete this record?")) return;
