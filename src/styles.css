@@ -460,25 +460,7 @@ label input:focus {
   padding-top: 15px;
   border-top: 1px solid #182c3e;
 }
-@media (max-width: 850px) {
-  main {
-    grid-template-columns: 1fr;
-  }
-  aside {
-    border-right: 0;
-    border-bottom: 1px solid #182c3e;
-    padding: 14px;
-  }
-  .tank {
-    min-width: 210px;
-  }
-  .content {
-    padding: 24px 16px;
-  }
-  .twocol {
-    grid-template-columns: 1fr;
-  }
-}
+
 @media (max-width: 600px) {
   header {
     padding: 0 15px;
@@ -586,7 +568,7 @@ label input:focus {
   }
 
   .menu-overlay {
-    display: block;
+  display: block;
 
     position: fixed;
     z-index: 90;
