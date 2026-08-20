@@ -3694,3 +3694,661 @@ input[type="number"]::-webkit-outer-spin-button {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* =========================================================
+   SPECIES LIBRARY
+========================================================= */
+
+.brand-button {
+  border: 0;
+  background: none;
+  color: inherit;
+  padding: 0;
+  text-align: left;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 25px;
+}
+
+.nav-item {
+  width: 100%;
+  min-height: 42px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 0 11px;
+
+  border: 1px solid transparent;
+  border-radius: 11px;
+
+  background: transparent;
+  color: var(--text-muted);
+
+  text-align: left;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.nav-item:hover {
+  background: var(--bg-card);
+  color: var(--text);
+}
+
+.nav-item.active {
+  background: color-mix(
+    in srgb,
+    var(--accent) 10%,
+    var(--bg-card)
+  );
+
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.species-sidebar-summary {
+  padding: 15px 8px;
+  border-top: 1px solid var(--border);
+}
+
+.species-sidebar-summary small {
+  display: block;
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.species-sidebar-summary strong {
+  display: block;
+  margin-top: 4px;
+  font: 800 30px Manrope;
+}
+
+.species-sidebar-summary p {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   SPECIES TOOLBAR
+========================================================= */
+
+.species-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.species-search {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.species-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  color: var(--text-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   SPECIES GRID
+========================================================= */
+
+.species-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.species-card {
+  position: relative;
+
+  overflow: hidden;
+
+  background: var(--bg-card);
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--card-radius);
+
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.species-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+.species-card-main {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 17px;
+
+  border: 0;
+  background: transparent;
+
+  color: var(--text);
+
+  text-align: left;
+}
+
+.species-card-icon {
+  width: 48px;
+  height: 48px;
+
+  flex: 0 0 48px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 13px;
+
+  background: color-mix(
+    in srgb,
+    var(--accent) 12%,
+    var(--bg-input)
+  );
+
+  font-size: 25px;
+}
+
+.species-card-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.species-card-info h3 {
+  margin: 0;
+
+  font: 700 16px Manrope;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.species-card-info em {
+  display: block;
+
+  margin-top: 3px;
+
+  color: var(--text-muted);
+
+  font-size: 11px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.species-tags {
+  display: flex;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.species-tags span {
+  padding: 4px 7px;
+
+  border-radius: 6px;
+
+  background: var(--bg-input);
+
+  color: var(--text-muted);
+
+  font-size: 9px;
+  text-transform: capitalize;
+}
+
+.species-card-meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+
+  border-top: 1px solid var(--border);
+}
+
+.species-card-meta > div {
+  padding: 10px 12px;
+  border-right: 1px solid var(--border);
+}
+
+.species-card-meta > div:last-child {
+  border-right: 0;
+}
+
+.species-card-meta small {
+  display: block;
+  color: var(--text-muted);
+  font-size: 9px;
+}
+
+.species-card-meta b {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+}
+
+.species-card-actions {
+  position: absolute;
+
+  top: 10px;
+  right: 10px;
+
+  display: flex;
+  gap: 4px;
+}
+
+.species-card-actions .icon {
+  width: 30px;
+  min-height: 30px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.species-card:hover
+  .species-card-actions
+  .icon {
+  opacity: 1;
+}
+
+/* =========================================================
+   SPECIES DETAIL
+========================================================= */
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  margin-bottom: 25px;
+
+  border: 0;
+  background: none;
+
+  color: var(--text-muted);
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.back-button:hover {
+  color: var(--accent);
+}
+
+.species-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+
+  margin-bottom: 14px;
+}
+
+.species-detail-icon {
+  width: 70px;
+  height: 70px;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 70px;
+
+  border-radius: 18px;
+
+  background: color-mix(
+    in srgb,
+    var(--accent) 13%,
+    var(--bg-card)
+  );
+
+  border: 1px solid var(--border);
+
+  font-size: 36px;
+}
+
+.species-detail-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.species-detail-title small {
+  color: var(--accent);
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 0.14em;
+}
+
+.species-detail-title h1 {
+  margin: 4px 0;
+
+  font: 800 34px Manrope;
+
+  letter-spacing: -0.04em;
+}
+
+.species-detail-title em {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.species-detail-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.species-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+
+  margin-bottom: 22px;
+}
+
+.species-detail-tags span {
+  padding: 7px 10px;
+
+  border-radius: 8px;
+
+  background: var(--bg-input);
+
+  border: 1px solid var(--border);
+
+  color: var(--text-secondary);
+
+  font-size: 10px;
+
+  text-transform: capitalize;
+}
+
+.species-detail-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 12px;
+}
+
+.parameter-range {
+  padding: 12px 0;
+
+  border-bottom: 1px solid var(--border);
+}
+
+.parameter-range:last-child {
+  border-bottom: 0;
+}
+
+.parameter-range-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.parameter-range-head span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.parameter-range-head b {
+  font-size: 12px;
+}
+
+.parameter-range > small {
+  display: block;
+
+  margin-top: 4px;
+
+  color: var(--accent);
+
+  font-size: 10px;
+}
+
+.species-range-row {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding: 13px 0;
+
+  border-bottom: 1px solid var(--border);
+}
+
+.species-range-row:last-child {
+  border-bottom: 0;
+}
+
+.species-range-row span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.species-range-row b {
+  color: var(--text);
+  font-size: 12px;
+  text-align: right;
+}
+
+.species-notes {
+  margin-top: 12px;
+}
+
+.species-notes p {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+/* =========================================================
+   SPECIES FORM
+========================================================= */
+
+.species-form {
+  padding-bottom: 5px;
+}
+
+.range-editor {
+  margin-bottom: 15px;
+  padding: 13px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 12px;
+
+  background: var(--bg-input);
+}
+
+.range-editor > strong {
+  display: block;
+
+  margin-bottom: 10px;
+
+  color: var(--text);
+
+  font-size: 12px;
+}
+
+.formgrid.four {
+  grid-template-columns:
+    repeat(4, 1fr);
+}
+
+label textarea,
+textarea {
+  display: block;
+
+  width: 100%;
+
+  min-height: 100px;
+
+  resize: vertical;
+
+  margin-top: 6px;
+
+  padding: 10px;
+
+  background: var(--bg-input);
+
+  border: 1px solid var(--border);
+
+  border-radius: 10px;
+
+  color: var(--text);
+
+  outline: none;
+
+  font: inherit;
+
+  font-size: 12px;
+}
+
+textarea:focus {
+  border-color: var(--accent);
+}
+
+label select,
+select {
+  display: block;
+
+  width: 100%;
+
+  margin-top: 6px;
+
+  padding: 10px;
+
+  background: var(--bg-input);
+
+  border: 1px solid var(--border);
+
+  border-radius: 10px;
+
+  color: var(--text);
+
+  outline: none;
+
+  font: inherit;
+
+  font-size: 12px;
+}
+
+select:focus {
+  border-color: var(--accent);
+}
+
+.species-empty {
+  margin-top: 70px;
+}
+
+/* =========================================================
+   MOBILE SPECIES
+========================================================= */
+
+@media (max-width: 850px) {
+  .species-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .species-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .species-detail-head {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .species-detail-actions {
+    width: 100%;
+  }
+
+  .species-detail-actions .secondary {
+    flex: 1;
+  }
+
+  .species-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .species-count {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 600px) {
+  .species-page-head {
+    gap: 12px;
+  }
+
+  .species-page-head .primary {
+    width: 100%;
+  }
+
+  .species-card-actions .icon {
+    opacity: 1;
+  }
+
+  .species-detail-title h1 {
+    font-size: 28px;
+  }
+
+  .species-detail-icon {
+    width: 58px;
+    height: 58px;
+    flex-basis: 58px;
+    font-size: 29px;
+  }
+
+  .species-card-meta {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .species-card-meta > div:last-child {
+    display: none;
+  }
+
+  .formgrid.four {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .range-editor {
+    padding: 11px;
+  }
+}
+
+@media (max-width: 400px) {
+  .species-card-main {
+    padding: 14px;
+  }
+
+  .species-card-icon {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+    font-size: 22px;
+  }
+
+  .formgrid.four {
+    grid-template-columns: 1fr;
+  }
+}
