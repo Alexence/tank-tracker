@@ -603,22 +603,24 @@ function App() {
           onClick={() =>
             setMenuOpen(true)
           }
-          aria-label="Open tank menu"
+          aria-label="Open menu"
         >
           ☰
         </button>
 
         <button
-          className="brand"
-          onClick={() =>
-            setPage("dashboard")
-          }
+          className="brand brand-button"
+          onClick={() => {
+            setPage("dashboard");
+            setSelectedSpecies(
+              null
+            );
+          }}
         >
           <span>🐟</span>
 
           <div>
             <b>Tank Tracker</b>
-
             <small>
               Aquarium control centre
             </small>
@@ -629,9 +631,7 @@ function App() {
           <button
             className="icon settings-button"
             onClick={() =>
-              setSettingsOpen(
-                true
-              )
+              setSettingsOpen(true)
             }
             aria-label="Open settings"
           >
@@ -639,24 +639,42 @@ function App() {
           </button>
 
           <button
-            className="icon refresh-button"
-            onClick={load}
+            onClick={
+              page === "species"
+                ? loadSpecies
+                : load
+            }
+            className="icon"
             aria-label="Refresh"
           >
-            <RefreshCw
-              size={17}
-            />
+            <RefreshCw size={17} />
           </button>
 
-          <button
-            className="primary"
-            onClick={() =>
-              open("tank")
-            }
-          >
-            <Plus size={17} />
-            Add tank
-          </button>
+          {page ===
+            "dashboard" && (
+            <button
+              className="primary"
+              onClick={() =>
+                open("tank")
+              }
+            >
+              <Plus size={17} />
+              Add tank
+            </button>
+          )}
+
+          {page ===
+            "species" && (
+            <button
+              className="primary"
+              onClick={() =>
+                open("species")
+              }
+            >
+              <Plus size={17} />
+              Add species
+            </button>
+          )}
         </div>
       </header>
 
@@ -665,6 +683,10 @@ function App() {
       =================================================== */}
 
       <main>
+        {/* =================================================
+            SIDEBAR
+        ================================================= */}
+
         <aside
           className={
             menuOpen
@@ -673,7 +695,7 @@ function App() {
           }
         >
           <div className="mobile-menu-head">
-            <b>Navigation</b>
+            <b>Menu</b>
 
             <button
               className="icon"
@@ -685,33 +707,50 @@ function App() {
             </button>
           </div>
 
-          {/* Dashboard */}
+          {/* NAVIGATION */}
 
-          <button
-            className={
-              "dashboard-nav " +
-              (page ===
-              "dashboard"
-                ? "active"
-                : "")
-            }
-            onClick={() => {
-              setPage(
-                "dashboard"
-              );
-              setMenuOpen(
-                false
-              );
-            }}
-          >
-            <LayoutDashboard
-              size={17}
-            />
+          <div className="sidebar-nav">
+            <button
+              className={
+                page === "dashboard"
+                  ? "nav-item active"
+                  : "nav-item"
+              }
+              onClick={() => {
+                setPage(
+                  "dashboard"
+                );
+                setMenuOpen(
+                  false
+                );
+              }}
+            >
+              <span>🏠</span>
+              <span>Dashboard</span>
+            </button>
 
-            <span>
-              Dashboard
-            </span>
-          </button>
+            <button
+              className={
+                page === "species"
+                  ? "nav-item active"
+                  : "nav-item"
+              }
+              onClick={() => {
+                setPage("species");
+                setMenuOpen(
+                  false
+                );
+                setSelectedSpecies(
+                  null
+                );
+              }}
+            >
+              <BookOpen size={17} />
+              <span>
+                Species Library
+              </span>
+            </button>
+          </div>
 
           {/* Tanks */}
 
@@ -1404,153 +1443,6 @@ function Dashboard({
                 </button>
               )
             )
-        )}
-      </div>
-
-      <div style={{ height: 12 }} />
-
-      {/* Tank overview */}
-
-      <div className="panel">
-        <div className="panelhead">
-          <div>
-            <small>
-              OVERVIEW
-            </small>
-
-            <h3>
-              Aquarium status
-            </h3>
-          </div>
-        </div>
-
-        {!tanks.length ? (
-          <div className="dashboard-empty">
-            <div>🐠</div>
-
-            <h2>
-              No aquariums yet
-            </h2>
-
-            <p className="muted">
-              Add a tank to get
-              started.
-            </p>
-          </div>
-        ) : (
-          <div className="dashboard-tank-grid">
-            {tanks.map(
-              (tank) => {
-                const p =
-                  latestByTank[
-                    tank.id
-                  ];
-
-                const livestock =
-                  tankSpecies.filter(
-                    (x) =>
-                      x.tank_id ===
-                      tank.id
-                  );
-
-                const tankAlerts =
-                  alerts.filter(
-                    (x) =>
-                      x.tank.id ===
-                      tank.id
-                  );
-
-                return (
-                  <button
-                    className="tank-overview-card"
-                    key={tank.id}
-                    onClick={() =>
-                      openTank(
-                        tank.id
-                      )
-                    }
-                  >
-                    <div className="tank-overview-head">
-                      <span className="tankicon">
-                        <Fish
-                          size={17}
-                        />
-                      </span>
-
-                      <div>
-                        <b>
-                          {tank.name}
-                        </b>
-
-                        <small>
-                          {tank.volume
-                            ? `${tank.volume} L`
-                            : "Volume not set"}
-                          {" · "}
-                          {
-                            livestock.length
-                          }{" "}
-                          species
-                        </small>
-                      </div>
-
-                      {tankAlerts.length >
-                        0 && (
-                        <AlertTriangle
-                          size={16}
-                          color="#ff9baa"
-                        />
-                      )}
-                    </div>
-
-                    <div className="tank-overview-metrics">
-                      <div>
-                        <small>
-                          pH
-                        </small>
-                        <b>
-                          {p?.ph ??
-                            "—"}
-                        </b>
-                      </div>
-
-                      <div>
-                        <small>
-                          Temp
-                        </small>
-                        <b>
-                          {p?.temperature !=
-                          null
-                            ? `${p.temperature}°`
-                            : "—"}
-                        </b>
-                      </div>
-
-                      <div>
-                        <small>
-                          NO₃
-                        </small>
-                        <b>
-                          {p?.nitrate ??
-                            "—"}
-                        </b>
-                      </div>
-
-                      <div>
-                        <small>
-                          TDS
-                        </small>
-                        <b>
-                          {p?.tds ??
-                            "—"}
-                        </b>
-                      </div>
-                    </div>
-                  </button>
-                );
-              }
-            )}
-          </div>
         )}
       </div>
 
