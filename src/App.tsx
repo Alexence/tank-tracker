@@ -19,6 +19,7 @@ import {
   Beaker,
   Waves,
   BarChart3,
+  BookOpen,
   Minus,
 } from "lucide-react";
 import {
@@ -43,7 +44,7 @@ import type {
    TYPES
 ========================================================= */
 
-type Page = "dashboard" | "tank";
+type Page = "dashboard" | "tank" | "species";
 
 type Modal =
   | "tank"
@@ -575,7 +576,7 @@ function App() {
   ) => {
     setSelected(id);
     setPage("tank");
-    setTab("overview");
+    setTab("");
     setMenuOpen(false);
   };
 
@@ -612,9 +613,6 @@ function App() {
           className="brand brand-button"
           onClick={() => {
             setPage("dashboard");
-            setSelectedSpecies(
-              null
-            );
           }}
         >
           <span>🐟</span>
@@ -639,11 +637,7 @@ function App() {
           </button>
 
           <button
-            onClick={
-              page === "species"
-                ? loadSpecies
-                : load
-            }
+            onClick={load}
             className="icon"
             aria-label="Refresh"
           >
@@ -737,12 +731,7 @@ function App() {
               }
               onClick={() => {
                 setPage("species");
-                setMenuOpen(
-                  false
-                );
-                setSelectedSpecies(
-                  null
-                );
+                setMenuOpen(false);
               }}
             >
               <BookOpen size={17} />
@@ -939,6 +928,14 @@ function App() {
             />
           )}
 
+          {page === "species" && (
+            <SpeciesLibrary
+              species={species}
+              open={open}
+              del={del}
+            />
+          )}
+
           {page === "tank" &&
             tank && (
               <TankPage
@@ -1002,6 +999,16 @@ function App() {
 
       {modal === "tank" && (
         <TankModal
+          row={edit}
+          close={() =>
+            setModal(null)
+          }
+          done={load}
+        />
+      )}
+
+      {modal === "species" && (
+        <SpeciesModal
           row={edit}
           close={() =>
             setModal(null)
@@ -1297,7 +1304,7 @@ function Dashboard({
           </h1>
 
           <p>
-            Overview of all your
+             of all your
             aquariums.
           </p>
         </div>
@@ -4221,6 +4228,568 @@ function TankSpeciesModal({
 /* =========================================================
    SETTINGS
 ========================================================= */
+
+
+/* =========================================================
+   SPECIES LIBRARY
+========================================================= */
+
+function SpeciesLibrary({
+  species,
+  open,
+  del,
+}: {
+  species: Species[];
+  open: (
+    modal: Modal,
+    row?: any
+  ) => void;
+  del: (
+    table: string,
+    id: string
+  ) => void;
+}) {
+  const [search, setSearch] =
+    useState("");
+
+  const filtered = useMemo(() => {
+    const q = search
+      .trim()
+      .toLowerCase();
+
+    if (!q) return species;
+
+    return species.filter(
+      (item) =>
+        item.name
+          .toLowerCase()
+          .includes(q) ||
+        item.scientific_name
+          ?.toLowerCase()
+          .includes(q)
+    );
+  }, [species, search]);
+
+  return (
+    <div className="species-page">
+      <div className="head">
+        <div>
+          <small>SPECIES DATABASE</small>
+          <h1>Species Library</h1>
+          <p>
+            Manage the species requirements
+            used by your aquariums.
+          </p>
+        </div>
+
+        <div>
+          <button
+            className="primary"
+            onClick={() => open("species")}
+          >
+            <Plus size={16} />
+            Add species
+          </button>
+        </div>
+      </div>
+
+      <div className="search species-search">
+        <Search size={15} />
+        <input
+          value={search}
+          onChange={(e) =>
+            setSearch(e.target.value)
+          }
+          placeholder="Search species..."
+        />
+      </div>
+
+      {!filtered.length ? (
+        <div className="panel center">
+          <div
+            style={{
+              fontSize: 38,
+              marginBottom: 10,
+            }}
+          >
+            🐟
+          </div>
+
+          <h3>
+            {species.length
+              ? "No species found"
+              : "Your species library is empty"}
+          </h3>
+
+          <p className="muted">
+            {species.length
+              ? "Try a different search."
+              : "Add your first species to start building your database."}
+          </p>
+
+          {!species.length && (
+            <button
+              className="primary"
+              onClick={() => open("species")}
+            >
+              <Plus size={16} />
+              Add species
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="species-library-grid">
+          {filtered.map((item) => (
+            <SpeciesLibraryCard
+              key={item.id}
+              species={item}
+              edit={open}
+              del={del}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SpeciesLibraryCard({
+  species,
+  edit,
+  del,
+}: {
+  species: Species;
+  edit: (
+    modal: Modal,
+    row?: any
+  ) => void;
+  del: (
+    table: string,
+    id: string
+  ) => void;
+}) {
+  const range = (
+    min: number | null | undefined,
+    max: number | null | undefined,
+    suffix = ""
+  ) => {
+    if (min == null && max == null)
+      return "—";
+
+    return `${min ?? "—"} – ${max ?? "—"}${suffix}`;
+  };
+
+  return (
+    <div className="panel species-library-card">
+      <div className="species-library-card-head">
+        <span className="livestock-icon">
+          <Fish size={18} />
+        </span>
+
+        <div>
+          <h3>{species.name}</h3>
+
+          {species.scientific_name && (
+            <small>
+              {species.scientific_name}
+            </small>
+          )}
+        </div>
+      </div>
+
+      {species.description && (
+        <p className="muted species-description">
+          {species.description}
+        </p>
+      )}
+
+      <div className="species-range-grid">
+        <div>
+          <small>pH</small>
+          <b>
+            {range(
+              species.min_ph,
+              species.max_ph
+            )}
+          </b>
+        </div>
+
+        <div>
+          <small>Temperature</small>
+          <b>
+            {range(
+              species.min_temperature,
+              species.max_temperature,
+              " °C"
+            )}
+          </b>
+        </div>
+
+        <div>
+          <small>GH</small>
+          <b>
+            {range(
+              species.min_gh,
+              species.max_gh
+            )}
+          </b>
+        </div>
+
+        <div>
+          <small>KH</small>
+          <b>
+            {range(
+              species.min_kh,
+              species.max_kh
+            )}
+          </b>
+        </div>
+
+        <div>
+          <small>TDS</small>
+          <b>
+            {range(
+              species.min_tds,
+              species.max_tds
+            )}
+          </b>
+        </div>
+
+        <div>
+          <small>Min tank</small>
+          <b>
+            {species.min_tank_volume ?? "—"}
+            {species.min_tank_volume != null
+              ? " L"
+              : ""}
+          </b>
+        </div>
+      </div>
+
+      <div className="species-library-tags">
+        {species.freshwater != null && (
+          <span>
+            {species.freshwater
+              ? "Freshwater"
+              : "Saltwater"}
+          </span>
+        )}
+
+        {species.peaceful != null && (
+          <span>
+            {species.peaceful
+              ? "Peaceful"
+              : "Not peaceful"}
+          </span>
+        )}
+      </div>
+
+      {species.notes && (
+        <p className="livestock-notes">
+          {species.notes}
+        </p>
+      )}
+
+      <div className="livestock-actions">
+        <button
+          className="secondary"
+          onClick={() =>
+            edit("species", species)
+          }
+        >
+          <Pencil size={13} />
+          Edit
+        </button>
+
+        <button
+          className="danger"
+          onClick={() =>
+            del("species", species.id)
+          }
+        >
+          <Trash2 size={14} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   SPECIES MODAL
+========================================================= */
+
+function SpeciesModal({
+  row,
+  close,
+  done,
+}: {
+  row: Species | null;
+  close: () => void;
+  done: () => Promise<void>;
+}) {
+  const base = {
+    name: "",
+    scientific_name: "",
+    description: "",
+    min_ph: null,
+    max_ph: null,
+    min_temperature: null,
+    max_temperature: null,
+    min_gh: null,
+    max_gh: null,
+    min_kh: null,
+    max_kh: null,
+    min_tds: null,
+    max_tds: null,
+    min_salinity: null,
+    max_salinity: null,
+    min_tank_volume: null,
+    freshwater: true,
+    peaceful: true,
+    notes: "",
+  };
+
+  const [form, setForm] =
+    useState<any>(
+      row
+        ? { ...base, ...row }
+        : base
+    );
+
+  const save = async (e: any) => {
+    e.preventDefault();
+
+    if (!form.name?.trim()) {
+      alert(
+        "Species name is required."
+      );
+      return;
+    }
+
+    const payload = {
+      ...form,
+      name: form.name.trim(),
+      scientific_name:
+        form.scientific_name?.trim() || null,
+      description:
+        form.description?.trim() || null,
+      notes:
+        form.notes?.trim() || null,
+    };
+
+    delete payload.id;
+    delete payload.created_at;
+    delete payload.updated_at;
+
+    const query = row
+      ? supabase
+          .from("species")
+          .update(payload)
+          .eq("id", row.id)
+      : supabase
+          .from("species")
+          .insert(payload);
+
+    const { error } = await query;
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    close();
+    await done();
+  };
+
+  return (
+    <Modal
+      title={
+        row
+          ? "Edit species"
+          : "Add species"
+      }
+      close={close}
+    >
+      <form onSubmit={save}>
+        <Field
+          label="Common name"
+          value={form.name}
+          set={(v) =>
+            setForm({
+              ...form,
+              name: v,
+            })
+          }
+        />
+
+        <Field
+          label="Scientific name"
+          value={form.scientific_name}
+          set={(v) =>
+            setForm({
+              ...form,
+              scientific_name: v,
+            })
+          }
+        />
+
+        <Field
+          label="Description"
+          value={form.description}
+          set={(v) =>
+            setForm({
+              ...form,
+              description: v,
+            })
+          }
+        />
+
+        <small className="section">
+          WATER PARAMETERS
+        </small>
+
+        <div className="formgrid three">
+          {[
+            ["Min pH", "min_ph"],
+            ["Max pH", "max_ph"],
+            [
+              "Min temperature °C",
+              "min_temperature",
+            ],
+            [
+              "Max temperature °C",
+              "max_temperature",
+            ],
+            ["Min GH", "min_gh"],
+            ["Max GH", "max_gh"],
+            ["Min KH", "min_kh"],
+            ["Max KH", "max_kh"],
+            ["Min TDS", "min_tds"],
+            ["Max TDS", "max_tds"],
+            [
+              "Min salinity",
+              "min_salinity",
+            ],
+            [
+              "Max salinity",
+              "max_salinity",
+            ],
+          ].map(([label, key]) => (
+            <Field
+              key={key}
+              label={label}
+              value={form[key]}
+              type="number"
+              set={(v) =>
+                setForm({
+                  ...form,
+                  [key]: v,
+                })
+              }
+            />
+          ))}
+        </div>
+
+        <small className="section">
+          TANK & BEHAVIOUR
+        </small>
+
+        <div className="formgrid">
+          <Field
+            label="Minimum tank volume (L)"
+            value={form.min_tank_volume}
+            type="number"
+            set={(v) =>
+              setForm({
+                ...form,
+                min_tank_volume: v,
+              })
+            }
+          />
+
+          <label>
+            Freshwater
+            <select
+              value={
+                form.freshwater == null
+                  ? ""
+                  : String(
+                      form.freshwater
+                    )
+              }
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  freshwater:
+                    e.target.value === ""
+                      ? null
+                      : e.target.value ===
+                        "true",
+                })
+              }
+            >
+              <option value="">
+                Not specified
+              </option>
+              <option value="true">
+                Yes
+              </option>
+              <option value="false">
+                No
+              </option>
+            </select>
+          </label>
+
+          <label>
+            Peaceful
+            <select
+              value={
+                form.peaceful == null
+                  ? ""
+                  : String(
+                      form.peaceful
+                    )
+              }
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  peaceful:
+                    e.target.value === ""
+                      ? null
+                      : e.target.value ===
+                        "true",
+                })
+              }
+            >
+              <option value="">
+                Not specified
+              </option>
+              <option value="true">
+                Yes
+              </option>
+              <option value="false">
+                No
+              </option>
+            </select>
+          </label>
+        </div>
+
+        <Field
+          label="Notes"
+          value={form.notes}
+          set={(v) =>
+            setForm({
+              ...form,
+              notes: v,
+            })
+          }
+        />
+
+        <Save close={close} />
+      </form>
+    </Modal>
+  );
+}
 
 function SettingsPanel({
   theme,
