@@ -1528,21 +1528,6 @@ function Dashboard({
           )}
         </div>
 
-        <div className="panel">
-          <div className="panelhead">
-            <div>
-              <small>
-                LIVESTOCK
-              </small>
-
-              <h3>
-                Species overview
-              </h3>
-            </div>
-
-            <Fish size={18} />
-          </div>
-
           {!tankSpecies.length ? (
             <p className="muted">
               No fish have been added
